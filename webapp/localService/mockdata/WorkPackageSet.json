@@ -1,8 +1,10 @@
 [{
     	"ObjectId": "8000019216",
+    	"GUID":"dc7dd06b-7f09-4582-86b8-fb4ee0b2c5b7",
     	"Description": "Test Wave Date",
     	"Type": "Work Package",
     	"Status": "Scope Finalized",
+    	"Title": "Test Wave Date",
     	"Priority": "4: Low",
     	"CreatedBy":"REMOTESAPBC4",
 		"Coordinator": "Richard Zhao",
@@ -19,17 +21,19 @@
     	"CountryCode": "CN",
     	"CompanyCode": "D501 SMTB Beijing",
     	"Division": "SHS",
-    	"CreatedDate":"2020-02-06",
-    	"Demonstration Status":"Yes", 
-    	"Program Change":"Yes",
-    	"Authorization Change":"Yes"
+    	"CreatedDate":"/Date(1444035581000)/",
+    	"DemonstrationStatus":"Yes", 
+    	"ProgramChange":"Yes",
+    	"AuthorizationChange":"Yes"
     },
 
     {
     	"ObjectId": "8000019217",
+    	"GUID":"dc7dd06b-7f09-4582-86b8-fb4ee0b2c5b8",
     	"Description": "Test Wave Date1",
     	"Type": "Work Package1",
     	"Status": "Scope Finalized",
+    	"Title": "Test Wave Date",
     	"Priority": "4: Low",
     	"CreatedBy":"REMOTESAPBC41",
     	"Coordinator": "Richard Zhao1",
@@ -43,12 +47,12 @@
     	"ApplicationCode": "SPI-CRQ1",
     	"FunctionCode": "FI FInacial Accouting",
     	"CRType": "Regional CR",
-    	"CountryCode": "CN",
+    	"CountryCode": "US",
     	"CompanyCode": "D501 SMTB Beijing",
     	"Division": "SHS",
-    	"CreatedDate":"2020-02-06",
-    	"Demonstration Status":"Yes", 
-    	"Program Change":"Yes",
-    	"Authorization Change":"Yes"
+    	"CreatedDate":"/Date(1444035581000)/",
+    	"DemonstrationStatus":"Yes", 
+    	"ProgramChange":"Yes",
+    	"AuthorizationChange":"Yes"
     }
 ]
