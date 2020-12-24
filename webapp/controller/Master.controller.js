@@ -286,7 +286,6 @@ sap.ui.define([
 			this.getModel("appView").setProperty("/layout", "TwoColumnsMidExpanded");
 			
 			this.getRouter().navTo("object", {
-				objectId : oItem.getBindingContext().getProperty("ObjectId"),
 				guid : oItem.getBindingContext().getProperty("GUID")
 			}, bReplace);
 		},

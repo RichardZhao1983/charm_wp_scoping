@@ -79,14 +79,13 @@ sap.ui.define([
 		 * @private
 		 */
 		_onObjectMatched : function (oEvent) {
-			var sObjectId =  oEvent.getParameter("arguments").objectId;
+			//var sObjectId =  oEvent.getParameter("arguments").objectId;
 			var sGUID =  oEvent.getParameter("arguments").guid;
 			
 			this.getModel("appView").setProperty("/layout", "TwoColumnsMidExpanded");
 
 			this.getModel().metadataLoaded().then( function() {
 				var sObjectPath = this.getModel().createKey("WorkPackageSet", {
-					ObjectId :  sObjectId,
 					GUID : sGUID
 				});
 				this._bindView("/" + sObjectPath);
