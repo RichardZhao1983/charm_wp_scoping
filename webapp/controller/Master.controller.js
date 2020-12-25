@@ -57,6 +57,10 @@ sap.ui.define([
 			});
 			this.getRouter().getRoute("master").attachPatternMatched(this._onMasterMatched, this);
 			this.getRouter().attachBypassed(this.onBypassed, this);
+
+			this.getModel().attachBatchRequestCompleted(function(){
+				
+			})
 		},
 		
 		/* =========================================================== */
@@ -284,7 +288,6 @@ sap.ui.define([
 			var bReplace = !Device.system.phone;
 			// set the layout property of FCL control to show two columns
 			this.getModel("appView").setProperty("/layout", "TwoColumnsMidExpanded");
-			
 			this.getRouter().navTo("object", {
 				guid : oItem.getBindingContext().getProperty("GUID")
 			}, bReplace);

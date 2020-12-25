@@ -45,6 +45,10 @@ sap.ui.define([
 			oView.textList = this.byId("textList");
 			oView.scopeTable = this.byId("scopeTable");
 			oView.effertTable = this.byId("effertTable");
+			var textValueModel = new JSONModel({
+				value:""
+			})
+			this.oView.setModel(textValueModel, "textValue");
 		},
 		
 
@@ -79,15 +83,10 @@ sap.ui.define([
 		 * @private
 		 */
 		_onObjectMatched : function (oEvent) {
-			//var sObjectId =  oEvent.getParameter("arguments").objectId;
 			var sGUID =  oEvent.getParameter("arguments").guid;
-			
-			this.getModel("appView").setProperty("/layout", "TwoColumnsMidExpanded");
-
+			var sObjectPath = "WorkPackageSet(guid'" + this.sGUID + "')";
+			this.getModel("appView").setProperty("/layout", "TwoColumnsMidExpanded");	
 			this.getModel().metadataLoaded().then( function() {
-				var sObjectPath = this.getModel().createKey("WorkPackageSet", {
-					GUID : sGUID
-				});
 				this._bindView("/" + sObjectPath);
 			}.bind(this));
 		},
@@ -106,28 +105,63 @@ sap.ui.define([
 			oView.taskListItemPath = "/TaskListItemSet";
 			oView.attachmentPath = sObjectPath + "/AttachmentSet";
 			oView.actionsPath = sObjectPath + "/ActionSet";
+			oView.textPath = sObjectPath + "/TextSet";
 
 			// If the view was not bound yet its not busy, only if the binding requests data it is set to busy again
 			oViewModel.setProperty("/busy", false);
 			this.initActionSheet(oView);
 			this.getView().bindElement({
 				path : sObjectPath,
+				parameters: {
+					expand : 'ActionSet,AttachmentSet,ScopeSet,EffortSet,TextSet'
+				},
 				events: {
 					change : this._onBindingChange.bind(this),
 					dataRequested : function () {
 						oViewModel.setProperty("/busy", true);
 					},
 					dataReceived: function () {
+						//this._onBindingChange.bind(this)
 						oViewModel.setProperty("/busy", false);
-					}
+					}.bind(this)
 				}
 			});
 			
 			
 		},
+
+		_onBindingChange : function () {
+			var oView = this.getView(),
+				oElementBinding = oView.getElementBinding();
+
+			// No data for the binding
+			if (!oElementBinding.getBoundContext()) {
+				this.getRouter().getTargets().display("detailObjectNotFound");
+				// if object could not be found, the selection in the master list
+				// does not make sense anymore.
+				this.getOwnerComponent().oListSelector.clearMasterListSelection();
+				return;
+			}
+
+			var sPath = oElementBinding.getPath(),
+				oResourceBundle = this.getResourceBundle(),
+				oObject = oView.getModel().getObject(sPath),
+				sObjectId = oObject.ObjectId,
+				sObjectDescription = oObject.Description,
+				oViewModel = this.getModel("detailView");
+
+			this.getOwnerComponent().oListSelector.selectAListItem(sPath);
+
+			oViewModel.setProperty("/shareSendEmailSubject",
+				oResourceBundle.getText("shareSendEmailObjectSubject", [sObjectId]));
+			oViewModel.setProperty("/shareSendEmailMessage",
+				oResourceBundle.getText("shareSendEmailObjectMessage", [sObjectDescription, sObjectId, location.href]));
+		},
 		
 		initActionSheet : function(oView){
 			var that = this;
+			var actionModel= new JSONModel();
+			this.setModel(actionModel, "actionModel");
 			var actionSheet = that.byId("actionSheet");
 			oView.getModel().read(oView.actionsPath, {
 				success: function (oData, oResponse) {
@@ -138,9 +172,8 @@ sap.ui.define([
 			                press: that.onPressAccept.bind(that)
 			          }))
 					});
-				},error: function (oError) {
-
-				}
+          			actionModel.setData(oData.results);
+				},error: function (oError) {}
 		    });
 		},
 		
@@ -229,34 +262,6 @@ sap.ui.define([
 		      controller.oView.attachmentfltr.setCount(AttachmentSet.length);
 		    },
 
-		 _onBindingChange : function () {
-			var oView = this.getView(),
-				oElementBinding = oView.getElementBinding();
-
-			// No data for the binding
-			if (!oElementBinding.getBoundContext()) {
-				this.getRouter().getTargets().display("detailObjectNotFound");
-				// if object could not be found, the selection in the master list
-				// does not make sense anymore.
-				this.getOwnerComponent().oListSelector.clearMasterListSelection();
-				return;
-			}
-
-			var sPath = oElementBinding.getPath(),
-				oResourceBundle = this.getResourceBundle(),
-				oObject = oView.getModel().getObject(sPath),
-				sObjectId = oObject.ObjectId,
-				sObjectDescription = oObject.Description,
-				oViewModel = this.getModel("detailView");
-
-			this.getOwnerComponent().oListSelector.selectAListItem(sPath);
-
-			oViewModel.setProperty("/shareSendEmailSubject",
-				oResourceBundle.getText("shareSendEmailObjectSubject", [sObjectId]));
-			oViewModel.setProperty("/shareSendEmailMessage",
-				oResourceBundle.getText("shareSendEmailObjectMessage", [sObjectDescription, sObjectId, location.href]));
-		},
-
 		_onMetadataLoaded : function () {
 			// Store original busy indicator delay for the detail view
 			var iOriginalViewBusyDelay = this.getView().getBusyIndicatorDelay(),
@@ -270,6 +275,8 @@ sap.ui.define([
 			oViewModel.setProperty("/busy", true);
 			// Restore original busy indicator delay for the detail view
 			oViewModel.setProperty("/delay", iOriginalViewBusyDelay);
+
+			
 		},
 
 		/**
@@ -348,19 +355,30 @@ sap.ui.define([
 		onPressAccept: function(oEvent) {
 			var that = this;
 			var sCurrentPath = oEvent.getSource().getBindingContext().getPath();
-			var status = oEvent.getSource().getText();
 			var oModel = that.getView().getModel();
 			oModel.setProperty(sCurrentPath + "/Status", status);
 			MessageToast.show(status);
-			//update backend
-			
-			var workpackageObj = this.getView().getModel().getProperty(sCurrentPath);
-			this.getView().getModel().update(sCurrentPath, workpackageObj, {
-				success: function(){
-					MessageBox.success(msg); // update does not return anything
+			var actionModel = this.getModel("actionModel");
+      		var actionGUID;
+			var workPackageObj = {};
+			workPackageObj.Status = oEvent.getSource().getText();
+      		$.each(actionModel.getData(), function(i, item) {
+				if(item.ActionName === oEvent.getSource().getText()){
+            		actionGUID = item.ActionGUID;
+          		}
+			});
+      
+			workPackageObj.ActionGUID = actionGUID;
+
+			//var workPackageObj = this.getView().getModel().getProperty(sCurrentPath);
+			that.oModel.update(sCurrentPath, workPackageObj, {
+				success: function(oData, oResponse){
+					var responseObj = JSON.parse(oResponse.headers["sap-message"]);
+					MessageBox.success(responseObj.message); 
 				},
-				error: function(oError){
-					MessageBox.error(oError.responseText);
+				error: function(oError,oResponse){
+					var errRes = JSON.parse(oError.responseText);
+					MessageBox.error(errRes.error.message.value);
 				}
 			});
 			
@@ -391,14 +409,22 @@ sap.ui.define([
 		        description: "description of change: "+ currentDate
 			}
 			
-			
-			var TextsSet = this.getView().textList.getModel().getData().TextsSet;
-			TextsSet.push(newText);
-		    this.jsonModelTexts.setData({
-		    	TextsSet: TextsSet
+			this.getView().getModel().read(oView.actionsPath, {
+				success: function (oData, oResponse) {
+					console.log(oData.results.length);
+					
+					var TextsSet = this.getView().textList.getModel().getData().TextsSet;
+					TextsSet.push(newText);
+		    		this.jsonModelTexts.setData({
+		    			TextsSet: TextsSet
+		    		});
+					this._selectNotificationDialog.close();
+					sap.ui.getCore().byId('textAreaWithBinding').setValue(""); 
+				},error: function (oError) {
+
+				}
 		    });
-			this._selectNotificationDialog.close();
-			sap.ui.getCore().byId('textAreaWithBinding').setValue(""); 
+			
 		},
 		
 		createNewText: function(sPath){
