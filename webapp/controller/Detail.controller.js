@@ -10,9 +10,11 @@ sap.ui.define([
 	'sap/m/MessagePopoverItem',
 	"sap/ui/core/ValueState",
 	"sap/m/MessageBox",
-	"zwx/sm/charm/wp/scoping/utils/dateUtils"
+	"sap/m/ObjectListItem",
+	"sap/m/ObjectAttribute",
+	"zwx/sm/charm/wp/scoping/utils/dateUtils",
 ], function (BaseController, JSONModel, formatter, mobileLibrary, MessageToast, Dialog, 
-		Button,MessagePopover,MessagePopoverItem,ValueState,MessageBox,DateUtils) {
+		Button,MessagePopover,MessagePopoverItem,ValueState,MessageBox,ObjectListItem,ObjectAttribute,DateUtils) {
 	"use strict";
 
 	// shortcut for sap.m.URLHelper
@@ -49,6 +51,7 @@ sap.ui.define([
 				value:""
 			})
 			this.oView.setModel(textValueModel, "textValue");
+			this.initNewTexts();
 		},
 		
 
@@ -84,7 +87,7 @@ sap.ui.define([
 		 */
 		_onObjectMatched : function (oEvent) {
 			var sGUID =  oEvent.getParameter("arguments").guid;
-			var sObjectPath = "WorkPackageSet(guid'" + this.sGUID + "')";
+			var sObjectPath = "WorkPackageSet(guid'" + sGUID + "')";
 			this.getModel("appView").setProperty("/layout", "TwoColumnsMidExpanded");	
 			this.getModel().metadataLoaded().then( function() {
 				this._bindView("/" + sObjectPath);
@@ -105,7 +108,7 @@ sap.ui.define([
 			oView.taskListItemPath = "/TaskListItemSet";
 			oView.attachmentPath = sObjectPath + "/AttachmentSet";
 			oView.actionsPath = sObjectPath + "/ActionSet";
-			oView.textPath = sObjectPath + "/TextSet";
+			oView.textSetPath = sObjectPath + "/TextSet";
 
 			// If the view was not bound yet its not busy, only if the binding requests data it is set to busy again
 			oViewModel.setProperty("/busy", false);
@@ -367,11 +370,9 @@ sap.ui.define([
             		actionGUID = item.ActionGUID;
           		}
 			});
-      
 			workPackageObj.ActionGUID = actionGUID;
 
-			//var workPackageObj = this.getView().getModel().getProperty(sCurrentPath);
-			that.oModel.update(sCurrentPath, workPackageObj, {
+			oModel.update(sCurrentPath, workPackageObj, {
 				success: function(oData, oResponse){
 					var responseObj = JSON.parse(oResponse.headers["sap-message"]);
 					MessageBox.success(responseObj.message); 
@@ -391,66 +392,67 @@ sap.ui.define([
 						"zwx.sm.charm.wp.scoping.view.NotificationDialog", this);
 				this.getView().addDependent(this._selectNotificationDialog);
 			}
-//			this.getView().setModel(new JSONModel(obj), "NotificationListSet");
 			this._selectNotificationDialog.open();
 		},
 		      
 		handleNotificationSelect: function(oEvent){
-			var sPath  = this.getView().getElementBinding().getPath();
-			console.log(sPath);
-//			this.createNewText(sPath);
+			var oView = this.getView();
+			var sPath  = oView.getElementBinding().getPath();
 			var fullName = this.getOwnerComponent().getModel("userInfo").getData().fullName;
-			console.log(fullName);
 			var currentDate = DateUtils.dateFormat("dd.mm.YYYY", new Date());
 			var textValue = this.oView.getModel("textValue").getData().value;
-			var newText =  {
-				name: fullName,
-		        text: textValue,
-		        description: "description of change: "+ currentDate
-			}
-			
-			this.getView().getModel().read(oView.actionsPath, {
-				success: function (oData, oResponse) {
-					console.log(oData.results.length);
-					
-					var TextsSet = this.getView().textList.getModel().getData().TextsSet;
-					TextsSet.push(newText);
-		    		this.jsonModelTexts.setData({
-		    			TextsSet: TextsSet
-		    		});
-					this._selectNotificationDialog.close();
-					sap.ui.getCore().byId('textAreaWithBinding').setValue(""); 
-				},error: function (oError) {
 
-				}
-		    });
-			
+			var newText = {
+				TdName: fullName,
+		        TextString: textValue,
+				DateTimeText: currentDate,
+				TdidTxt: "description of change:",
+				sPath : sPath
+			}
+
+			this.getModel("newTexts").push(newText);
+			var objectListItem = new ObjectListItem({
+				title: fullName,
+				attributes: [
+					new ObjectAttribute({text: textValue}),
+					new ObjectAttribute({text: "description of change:" + currentDate})
+				]
+			});
+			oView.textList.addItem(objectListItem);
+
+			this._selectNotificationDialog.close();	
+			sap.ui.getCore().byId('textAreaWithBinding').setValue(""); 
 		},
 		
-		createNewText: function(sPath){
-			var fullName = this.getOwnerComponent().getModel("userInfo").getData().fullName;
-			console.log(fullName);
-			var textValue = this.oView.getModel("textValue").getData().value;
-			
-			var currentDate = DateUtils.dateFormat("dd.mm.YYYY", new Date());
-			var newText =  {
-				"name": fullName,
-		        "text": textValue,
-		        "description": "description of change: "+ currentDate
-			}
-			var oModel = this.getView().getModel();
-			oModel.create("/TextsSet", newText, {
-				success: function (odata, Response) {
-					if (odata !== "" || odata !== undefined) {
+		createNewText: function(){
+			var oView = this.getView();
+			var oModel = oView.getModel();
+			var oResourceBundle = oView.getModel("i18n").getResourceBundle();		
+			var newTextObj = this.getModel("newTexts");
+					
+			oModel.create("/TextSet", newTextObj, {
+				success: function (oData, Response) {
+					if (oData !== "" || oData !== undefined) {
 						MessageBox.success("Created successfully.");
 					} else {
 						MessageBox.error("New entry not created.");
 					}
-				},
-				error: function (cc, vv) {
-
-				}
+					this.initNewTexts();
+				}.bind(this),
+				error: function(oError) {
+					MessageBox.error(oResourceBundle.getText("SAVE_WORKPACKAGES_ERROR"));
+					this.getView().setBusy(false);
+				}.bind(this)
 			});
+		},
+
+		initNewTexts : function(){
+			var newTexts = [];
+			this.setModel(newTexts, "newTexts");
+		},
+
+		onSaveButtonPress: function(oEvent) {
+			this.createNewText();
 		},
 		
 		handleNotificationCancelDialog : function() {
@@ -492,30 +494,7 @@ sap.ui.define([
 				console.log(oObject.POP);
 				oSource.setValueStateText(oResourceBundle.getText("ERROR_EMPTY_NOTE"));
 			}
-		},
-				
-		onSaveButtonPress: function(oEvent) {
-			var that = this;
-			var oModel = this.getView().getModel();
-			var oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
-			var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
-			if( oModel.hasPendingChanges() ) {
-				that.oView.setBusy(true);
-				oModel.submitChanges({
-					success: function(oData) {
-						MessageBox.success(oResourceBundle.getText("SAVE_WORKPACKAGE_SSUCCESS"), {styleClass: bCompact ? "sapUiSizeCompact" : ""});
-						that.getView().setBusy(false);
-					},
-					error: function(oError) {
-						MessageBox.error(oResourceBundle.getText("SAVE_WORKPACKAGES_ERROR"), {styleClass: bCompact ? "sapUiSizeCompact" : ""});
-						that.getView().setBusy(false);
-					}
-				});
-			} else {
-				MessageBox.success(oResourceBundle.getText("SAVE_WORKPACKAGES_NOCHANGES"), {styleClass: bCompact ? "sapUiSizeCompact" : ""});
-				that.oView.setBusy(false);
-			}
-		},
+		}
 	});
 
 });
