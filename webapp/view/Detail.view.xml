@@ -160,9 +160,10 @@
 									<OverflowToolbar>
 										<ToolbarSpacer/>
 										<Button
-											id="addButton"
-											press=".onAddText"
-											icon="sap-icon://add"
+											id="addButton" 
+											enabled="{addNewTextButton>/enabled}" 
+											press=".onAddText" 
+											icon="sap-icon://add" 
 											type="Transparent"/>
 									</OverflowToolbar>
 								</headerToolbar>
