@@ -46,7 +46,7 @@
 						<SearchField
 							id="searchField"
 							showRefreshButton="true"
-							placeholder="Enter ObjectId or Compand"
+							placeholder="Enter ObjectId or Company Code"
 							tooltip="{i18n>masterSearchTooltip}"
 							search=".onSearch"
 							width="auto">
