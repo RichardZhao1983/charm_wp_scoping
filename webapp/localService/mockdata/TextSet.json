@@ -1,6 +1,7 @@
 [{
     	"Tdobject": "8000019236",
-    	"TextString": "good",
+    	"TdfuserText": "Richard",
+    	"TextString": "I am going to test a very good good good good good good good good good long long string I am going to test a very good good good good good good good good good long long string",
     	"TdName": "Richard",
     	"TdidTxt": "description of change:",
     	"DateTimeText": "08/30/2020"
@@ -8,6 +9,7 @@
 
     {
     	"Tdobject": "8000019237",
+    	"TdfuserText": "Richard",
     	"TextString": "good",
     	"TdName": "Richard",
     	"TdidTxt": "description of change:",

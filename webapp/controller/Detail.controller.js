@@ -12,9 +12,9 @@ sap.ui.define([
 	"sap/m/MessageBox",
 	"sap/m/ObjectListItem",
 	"sap/m/ObjectAttribute",
-	"zwx/sm/charm/wp/scoping/utils/dateUtils",
+	
 ], function (BaseController, JSONModel, formatter, mobileLibrary, MessageToast, Dialog,
-	Button, MessagePopover, MessagePopoverItem, ValueState, MessageBox, ObjectListItem, ObjectAttribute, DateUtils) {
+	Button, MessagePopover, MessagePopoverItem, ValueState, MessageBox, ObjectListItem, ObjectAttribute) {
 	"use strict";
 
 	// shortcut for sap.m.URLHelper

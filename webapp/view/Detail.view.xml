@@ -155,7 +155,7 @@
 					
 					<IconTabFilter icon="sap-icon://post" iconColor="Neutral" id="textFilter" text="{i18n>ICON_TAB_Texts}">
 						<ScrollContainer height="100%" width="100%" horizontal="false" vertical="true">
-							<List id="textList" items="{path: 'TextSet'}" > 
+							<List id="textList" items="{path: '/TextSet'}" > 
 								<headerToolbar>
 									<OverflowToolbar>
 										<ToolbarSpacer/>
@@ -175,8 +175,13 @@
 										</attributes>
 									</ObjectListItem> -->
 									<CustomListItem id="__listItemShipments">
-										<content>
-											<form:SimpleForm id="__formShipmentList" editable="true" layout="GridLayout" labelMinWidth="100">
+										<content >
+											<FlexBox direction="Column" alignItems="Start" class="sapThemeFontSize">
+												<Text id="__textShipmentId" text="{TdfuserText}" class="sapThemeFontSize"/>
+												<Text id="__textShipmentCode" text="{TextString}" class="sapThemeFontSize"/>
+												<Text id="__textShipmentLongText" text="{TdidTxt}{DateTimeText}" class="sapThemeFontSize" />
+											</FlexBox>
+											<!-- <form:SimpleForm id="__formShipmentList" editable="true" layout="GridLayout" labelMinWidth="100">
 												<form:content>
 
 													<Label id="__labelShipmentId" text="TdfuserText"/>
@@ -188,7 +193,7 @@
 													<Label id="__labelShipmentLongText" text="TdidTxt"/>
 													<Text id="__textShipmentLongText" text="{TdidTxt}{DateTimeText}" />
 												</form:content>
-											</form:SimpleForm>
+											</form:SimpleForm> -->
 										</content>
 									</CustomListItem>
 								</items>
