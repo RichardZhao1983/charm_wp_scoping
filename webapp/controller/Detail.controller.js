@@ -405,10 +405,10 @@ sap.ui.define([
 						MessageBox.error(messageText);
 					}else{
 						MessageBox.success(messageText);
-					}
-					oModel.refresh(true);
+						oModel.refresh(true);
+						this.onCloseDetailPress();
+					}					
 					this.getView().getElementBinding().refresh(true);
-					this.onCloseDetailPress();
 					oViewModel.setProperty("/busy", false);
 				}.bind(this),
 				error: function (oError, oResponse) {
@@ -440,11 +440,12 @@ sap.ui.define([
 			var textValue = this.oView.getModel("textValue").getData().value;
 			var tdidTxt = "description of change:";
 			var newText = {
-				TdName: fullName,
+				TdfuserText: fullName,
 				TextString: textValue,
 				DateTimeText: currentDate,
 				TdidTxt: tdidTxt,
-				sPath: sPath
+				refGUID: this.sGUID,
+				Tdid: "CR01"
 			}
 
 			this.oView.setModel(newText, "newText");
@@ -469,7 +470,6 @@ sap.ui.define([
 			var oModel = oView.getModel();
 			var oResourceBundle = oView.getModel("i18n").getResourceBundle();
 			var newTextObj = this.oView.getModel("newText");
-			oView.setBusy(true);
 			oModel.create("/TextSet", newTextObj, {
 				success: function (oData, Response) {
 					if (oData !== "" || oData !== undefined) {
@@ -477,15 +477,19 @@ sap.ui.define([
 					} else {
 						MessageBox.error("New entry not created.");
 					}
+					oModel.refresh(true);
+					this.resetAddNewTextButton();
+					this.getView().setBusy(false);
 				}.bind(this),
 				error: function (oError) {
-					MessageBox.error(oResourceBundle.getText("SAVE_WORKPACKAGES_ERROR"));
+					MessageBox.error("New entry not created.");
 					this.getView().setBusy(false);
 				}.bind(this)
 			});
 		},
 
 		onSaveButtonPress: function (oEvent) {
+			this.getView().setBusy(true);
 			this.createNewText();
 		},
 
