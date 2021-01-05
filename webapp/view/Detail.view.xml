@@ -238,7 +238,7 @@
 					
 					<IconTabFilter icon="sap-icon://calendar" iconColor="Neutral" id="dateFilter" text="{i18n>ICON_TAB_EFFORT}">
 						<ScrollContainer height="100%" width="100%" horizontal="false" vertical="true">
-								<Table id="EFFORTTable" inset="false" items="{path: 'EffortSet'}">
+								<Table id="effortTable" inset="false" items="{path: 'EffortSet'}">
 									<columns>
 										<Column width="6rem">
 											<Text text="{i18n>EFFORT_TYPE}" />

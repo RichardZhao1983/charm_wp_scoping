@@ -12,9 +12,9 @@ sap.ui.define([
 	"sap/m/MessageBox",
 	"sap/m/ObjectListItem",
 	"sap/m/ObjectAttribute",
-	
+	"zwx/sm/charm/wp/scoping/utils/dateUtils",
 ], function (BaseController, JSONModel, formatter, mobileLibrary, MessageToast, Dialog,
-	Button, MessagePopover, MessagePopoverItem, ValueState, MessageBox, ObjectListItem, ObjectAttribute) {
+	Button, MessagePopover, MessagePopoverItem, ValueState, MessageBox, ObjectListItem, ObjectAttribute, DateUtils) {
 	"use strict";
 
 	// shortcut for sap.m.URLHelper
@@ -41,24 +41,20 @@ sap.ui.define([
 
 		initViewComponents: function () {
 			var oView = this.getView();
-			oView.attachmentCollection = this.byId("fileupload");
-			oView.attachmentfltr = this.byId("attachmentFilter");
-			oView.trfltr = this.byId("trFilter");
 			oView.textList = this.byId("textList");
-			oView.scopeTable = this.byId("scopeTable");
-			oView.effertTable = this.byId("effertTable");
 			this.initNewTexts();
 		},
 
 		initNewTexts: function () {
+			var oView = this.getView();
 			var textValueModel = new JSONModel({
 				value: ""
 			})	
 			var addNewTextButtonModel = new JSONModel({
 				enabled: true
 			})
-			this.oView.setModel(textValueModel, "textValue");
-			this.oView.setModel(addNewTextButtonModel, "addNewTextButton");
+			oView.setModel(textValueModel, "textValue");
+			oView.setModel(addNewTextButtonModel, "addNewTextButton");
 		},
 
 		resetAddNewTextButton: function () {
@@ -66,37 +62,6 @@ sap.ui.define([
 			this.oView.getModel("addNewTextButton").refresh(true);
 		},
 
-
-		/* =========================================================== */
-		/* event handlers                                              */
-		/* =========================================================== */
-
-		/**
-		 * Event handler when the share by E-Mail button has been clicked
-		 * @public
-		 */
-		onSendEmailPress: function () {
-			var oViewModel = this.getModel("detailView");
-
-			URLHelper.triggerEmail(
-				null,
-				oViewModel.getProperty("/shareSendEmailSubject"),
-				oViewModel.getProperty("/shareSendEmailMessage")
-			);
-		},
-
-
-
-		/* =========================================================== */
-		/* begin: internal methods                                     */
-		/* =========================================================== */
-
-		/**
-		 * Binds the view to the object path and expands the aggregated line items.
-		 * @function
-		 * @param {sap.ui.base.Event} oEvent pattern match event in route 'object'
-		 * @private
-		 */
 		_onObjectMatched: function (oEvent) {
 			this.sGUID = oEvent.getParameter("arguments").guid;
 			var sObjectPath = "WorkPackageSet(guid'" + this.sGUID + "')";
@@ -107,13 +72,6 @@ sap.ui.define([
 			this.resetAddNewTextButton();
 		},
 
-		/**
-		 * Binds the view to the object path. Makes sure that detail view displays
-		 * a busy indicator while data for the corresponding element binding is loaded.
-		 * @function
-		 * @param {string} sObjectPath path to the object to be bound to the view.
-		 * @private
-		 */
 		_bindView: function (sObjectPath) {
 			// Set busy indicator during view binding
 			var oViewModel = this.getModel("detailView");
@@ -198,91 +156,6 @@ sap.ui.define([
 			actionSheet.removeAllButtons();
 		},
 
-		readItems: function (oView) {
-			var that = this;
-			var fnSuccess = function (oResponse) {
-				that.oTaskListItemSet = oResponse.results;
-				that.oView.trfltr.setCount(oResponse.results.length);
-			};
-
-			var fnError = function (oResponse) {
-			};
-
-			this.getOwnerComponent().getModel().read(oView.taskListItemPath, {
-				success: fnSuccess,
-				error: fnError
-			});
-
-		},
-
-		readTr: function (oView) {
-			var that = this;
-			var fnSuccess = function (oResponse) {
-				that.oTaskListItemSet = oResponse.results;
-				//		        that.oView.trfltr.setCount(oResponse.results.length);
-			};
-
-			var fnError = function (oResponse) {
-			};
-
-			this.getOwnerComponent().getModel().read(oView.taskListItemPath, {
-				success: fnSuccess,
-				error: fnError
-			});
-
-		},
-
-		readAttachments: function (oView) {
-			var that = this;
-			if (this.getView().attachmentCollection.getUploadEnabled()) {
-				oView.attachmentCollection.setUploadUrl(oView.getModel().sServiceUrl + oView.attachmentPath);
-			}
-
-			this.jsonModelAttachments = new JSONModel();
-			oView.attachmentCollection.setModel(this.jsonModelAttachments);
-
-			//Clear all attachments first
-			oView.attachmentCollection.removeAllItems();
-			oView.attachmentCollection.aItems = [];
-
-			oView.getModel().read(oView.attachmentPath, {
-				success: fnSuccess,
-				error: fnError
-			});
-
-			var fnSuccess = function (oResponse) {
-				that.oView.attachmentCollection.setBusy(false);
-				that.oAttachmentSet = oResponse.results;
-				that.setAttachments(that, that.oAttachmentSet);
-			};
-
-			var fnError = function (oResponse) {
-				that.oView.attachmentCollection.setBusy(false);
-			};
-
-			oView.attachmentCollection.setBusy(true);
-			that.setAttachments(that, that.oAttachmentSet.getData());
-			that.oView.attachmentCollection.setBusy(false);
-
-		},
-
-		setAttachments: function (controller, AttachmentSet) {
-			$.each(AttachmentSet, function (index, value) {
-				AttachmentSet[index].url = value.url;
-				AttachmentSet[index].documentId = "refGuid=guid'" + value.refGuid + "',loioId='" + value.loioId + "',phioId='" + value.phioId + "'";
-				var oFile = value;
-				if (this.extHookUploadCollectionItemData) { // check whether any extension has implemented the hook...
-					this.extHookUploadCollectionItemData(oFile); // ...and call it
-				}
-			});
-
-			controller.jsonModelAttachments.setData({
-				AttachmentSet: AttachmentSet
-			});
-
-			controller.oView.attachmentfltr.setCount(AttachmentSet.length);
-		},
-
 		_onMetadataLoaded: function () {
 			// Store original busy indicator delay for the detail view
 			var iOriginalViewBusyDelay = this.getView().getBusyIndicatorDelay(),
@@ -324,47 +197,6 @@ sap.ui.define([
 				// reset to previous layout
 				this.getModel("appView").setProperty("/layout", this.getModel("appView").getProperty("/previousLayout"));
 			}
-		},
-
-
-		// Attachment upload
-		/**
-		 * Add Token on http head
-		 */
-		onChange: function (oEvent) {
-			var oModel = this.getModel();
-			var oUploadCollection = oEvent.getSource();
-
-			var token = this.sToken || oModel.getSecurityToken();
-
-			// If filename exceeds 40 characters, trim it
-			var filename = oEvent.getParameter("mParameters").files[0].name;
-			if (filename.length > 40) {
-				var aFilenameParts = filename.split(".");
-				if (aFilenameParts.length === 1) {
-					filename = filename.substring(0, 40);
-				} else {
-					var filenameExtension = aFilenameParts[aFilenameParts.length - 1];
-					aFilenameParts = aFilenameParts.slice(0, aFilenameParts.length - 1);
-					var remainingCharacters = 39 - filenameExtension.length;
-					filename = aFilenameParts.join(".").substring(0, remainingCharacters) + "." + filenameExtension;
-				}
-			}
-			/* eslint-disable JS_ODATA_MANUAL_TOKEN */
-			// Header Token
-			var oCustomerHeaderToken = new sap.m.UploadCollectionParameter({
-				name: "x-csrf-token",
-				value: token
-			});
-			/* eslint-enable JS_ODATA_MANUAL_TOKEN */
-			oUploadCollection.addHeaderParameter(oCustomerHeaderToken);
-
-			// Header Content-Disposition
-			var oCustomerHeaderContentDisp = new sap.m.UploadCollectionParameter({
-				name: "content-disposition",
-				value: "inline; filename=\"" + encodeURIComponent(filename) + "\""
-			});
-			oUploadCollection.addHeaderParameter(oCustomerHeaderContentDisp);
 		},
 
 		onButtonPress: function (oEvent) {
