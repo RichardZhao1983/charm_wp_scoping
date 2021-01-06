@@ -46,19 +46,18 @@
 						<SearchField
 							id="searchField"
 							showRefreshButton="true"
-							placeholder="Enter ObjectId or Company Code"
+							placeholder="Enter ObjectId or Country Code"
 							tooltip="{i18n>masterSearchTooltip}"
 							search=".onSearch"
 							width="auto">
 							<layoutData>
 								<OverflowToolbarLayoutData
-									minWidth="150px"
-									maxWidth="220px"
+									minWidth="140px"
+									maxWidth="250px"
 									shrinkable="true"
 									priority="NeverOverflow"/>
 							</layoutData>
 						</SearchField>
-<!-- 						<Button icon="sap-icon://search" class="sapUiSmallMargin" press=".onCreateDateSearchButtonPress"/> -->
 						<ToolbarSpacer/>
 					</OverflowToolbar>
 				</headerToolbar>
